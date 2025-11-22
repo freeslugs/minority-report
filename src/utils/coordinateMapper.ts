@@ -4,6 +4,7 @@ import { MessageType } from '../types/message.types';
 /**
  * Map camera coordinates to screen coordinates
  * Camera view is 640x480, screen can be any size
+ * Note: X is flipped because webcams typically mirror the image
  */
 export function mapCameraToScreen(
   cameraPoint: Landmark,
@@ -11,7 +12,7 @@ export function mapCameraToScreen(
   screenHeight: number
 ): { x: number; y: number } {
   return {
-    x: cameraPoint.x * screenWidth,
+    x: (1 - cameraPoint.x) * screenWidth, // Flip X axis (mirror)
     y: cameraPoint.y * screenHeight
   };
 }
