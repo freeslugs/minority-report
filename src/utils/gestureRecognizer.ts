@@ -1,5 +1,5 @@
 import { Hand } from '../types/hand.types';
-import { PINCH_THRESHOLD, SWIPE_THRESHOLD, SWIPE_TIME_WINDOW, VIDEO_WIDTH, VIDEO_HEIGHT } from '../shared/constants';
+import { PINCH_THRESHOLD, PINCH_READY_THRESHOLD, SWIPE_THRESHOLD, SWIPE_TIME_WINDOW, VIDEO_WIDTH, VIDEO_HEIGHT } from '../shared/constants';
 
 export interface SwipeTracker {
   positions: { y: number; time: number }[];
@@ -16,7 +16,7 @@ export interface GestureResult {
 /**
  * Detect pinch gesture by measuring distance between thumb tip and index tip
  */
-export function detectPinch(hand: Hand): { isPinching: boolean; distance: number } {
+export function detectPinch(hand: Hand): { isPinching: boolean; isReady: boolean; distance: number } {
   const thumbTip = hand.landmarks[4];
   const indexTip = hand.landmarks[8];
   
@@ -27,6 +27,7 @@ export function detectPinch(hand: Hand): { isPinching: boolean; distance: number
   
   return {
     isPinching: distance < PINCH_THRESHOLD,
+    isReady: distance < PINCH_READY_THRESHOLD && distance >= PINCH_THRESHOLD, // Close but not quite pinching
     distance
   };
 }
@@ -99,23 +100,23 @@ export function detectGestures(
   if (pinch.isPinching) {
     return {
       type: 'pinch',
-      confidence: 1 - (pinch.distance / PINCH_THRESHOLD), // Higher confidence when closer
-      data: { distance: pinch.distance }
+      confidence: Math.max(0.7, 1 - (pinch.distance / PINCH_THRESHOLD)), // Minimum 0.7 confidence when pinching
+      data: { distance: pinch.distance, isReady: pinch.isReady }
     };
   }
   
-  // Check for swipe
+  // Check for swipe (only if not pinching)
   const swipe = detectSwipe(hand, swipeTracker);
-  if (swipe.direction === 'up') {
+  if (swipe.direction === 'up' && swipe.velocity > 200) {
     return {
       type: 'swipe_up',
-      confidence: Math.min(swipe.velocity / 500, 1), // Normalize velocity
+      confidence: Math.min(swipe.velocity / 400, 1), // Lower threshold for easier detection
       data: { velocity: swipe.velocity }
     };
-  } else if (swipe.direction === 'down') {
+  } else if (swipe.direction === 'down' && swipe.velocity > 200) {
     return {
       type: 'swipe_down',
-      confidence: Math.min(swipe.velocity / 500, 1),
+      confidence: Math.min(swipe.velocity / 400, 1),
       data: { velocity: swipe.velocity }
     };
   }

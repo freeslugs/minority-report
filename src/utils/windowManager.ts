@@ -1,8 +1,9 @@
 import { Hand } from '../types/hand.types';
 import { MessageType } from '../types/message.types';
-import { mapCameraToScreen, findWindowAtPointViaMessage, getScreenDimensions } from './coordinateMapper';
+import { mapCameraToScreen, findWindowAtPointViaMessage, getScreenDimensions, WindowInfo } from './coordinateMapper';
 
 let highlightedWindowId: number | null = null;
+let highlightedWindowInfo: { url?: string; title?: string } | null = null;
 let highlightOverlay: HTMLDivElement | null = null;
 
 /**
@@ -37,6 +38,7 @@ export function removeHighlight(): void {
   if (highlightedWindowId !== null) {
     console.log(`[HandWave] Removing highlight from window ${highlightedWindowId}`);
     highlightedWindowId = null;
+    highlightedWindowInfo = null;
   }
   
   if (highlightOverlay) {
@@ -62,12 +64,22 @@ export async function minimizeWindow(windowId: number): Promise<void> {
 /**
  * Get the window that a hand is pointing at
  */
-export async function getWindowForHand(hand: Hand): Promise<chrome.windows.Window | null> {
+export async function getWindowForHand(hand: Hand): Promise<WindowInfo> {
   const screen = getScreenDimensions();
   const wrist = hand.landmarks[0];
   const screenPoint = mapCameraToScreen(wrist, screen.width, screen.height);
   
-  return await findWindowAtPointViaMessage(screenPoint.x, screenPoint.y);
+  const result = await findWindowAtPointViaMessage(screenPoint.x, screenPoint.y);
+  
+  // Store window info for display
+  if (result.window && result.window.id) {
+    highlightedWindowInfo = {
+      url: result.url,
+      title: result.title
+    };
+  }
+  
+  return result;
 }
 
 /**
@@ -75,5 +87,12 @@ export async function getWindowForHand(hand: Hand): Promise<chrome.windows.Windo
  */
 export function getHighlightedWindowId(): number | null {
   return highlightedWindowId;
+}
+
+/**
+ * Get currently highlighted window info (URL/title)
+ */
+export function getHighlightedWindowInfo(): { url?: string; title?: string } | null {
+  return highlightedWindowInfo;
 }
 

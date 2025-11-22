@@ -51,16 +51,16 @@ export function useHandDetection(videoRef: RefObject<HTMLVideoElement>) {
           const gesture = detectGestures(hand, tracker);
           
           // Window selection: map hand to window
-          const targetWindow = await getWindowForHand(hand);
-          if (targetWindow && targetWindow.id !== undefined && targetWindow.id !== lastWindowIdRef.current) {
-            const windowId = targetWindow.id;
+          const targetWindowInfo = await getWindowForHand(hand);
+          if (targetWindowInfo.window && targetWindowInfo.window.id !== undefined && targetWindowInfo.window.id !== lastWindowIdRef.current) {
+            const windowId = targetWindowInfo.window.id;
             await highlightWindow(windowId);
             lastWindowIdRef.current = windowId;
             
             // Send highlight message
             chrome.runtime.sendMessage({
               type: MessageType.HIGHLIGHT_WINDOW,
-              payload: { windowId }
+              payload: { windowId, url: targetWindowInfo.url, title: targetWindowInfo.title }
             }).catch(() => {});
           }
           

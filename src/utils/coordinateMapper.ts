@@ -33,10 +33,16 @@ export async function findWindowAtPoint(
 /**
  * Find window at point by sending message to background worker
  */
+export interface WindowInfo {
+  window: chrome.windows.Window | null;
+  url?: string;
+  title?: string;
+}
+
 export async function findWindowAtPointViaMessage(
   screenX: number,
   screenY: number
-): Promise<chrome.windows.Window | null> {
+): Promise<WindowInfo> {
   try {
     return new Promise((resolve) => {
       chrome.runtime.sendMessage(
@@ -47,16 +53,20 @@ export async function findWindowAtPointViaMessage(
         (response) => {
           if (chrome.runtime.lastError) {
             console.error('Error finding window:', chrome.runtime.lastError);
-            resolve(null);
+            resolve({ window: null });
           } else {
-            resolve(response?.window || null);
+            resolve({
+              window: response?.window || null,
+              url: response?.url,
+              title: response?.title
+            });
           }
         }
       );
     });
   } catch (error) {
     console.error('Error finding window:', error);
-    return null;
+    return { window: null };
   }
 }
 

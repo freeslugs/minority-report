@@ -71,10 +71,10 @@ async function closeOverlayWindow(): Promise<void> {
   }
 }
 
-// Helper function to find window at screen point
-async function findWindowAtPoint(screenX: number, screenY: number): Promise<chrome.windows.Window | null> {
+// Helper function to find window at screen point with URL/title
+async function findWindowAtPoint(screenX: number, screenY: number): Promise<{ window: chrome.windows.Window | null; url?: string; title?: string }> {
   try {
-    const windows = await chrome.windows.getAll({ populate: false });
+    const windows = await chrome.windows.getAll({ populate: true });
     
     for (const win of windows) {
       if (win.left !== undefined && win.top !== undefined && 
@@ -85,15 +85,25 @@ async function findWindowAtPoint(screenX: number, screenY: number): Promise<chro
           screenY >= win.top &&
           screenY <= win.top + win.height
         ) {
-          return win;
+          // Get active tab URL and title
+          let url = '';
+          let title = '';
+          
+          if (win.tabs && win.tabs.length > 0) {
+            const activeTab = win.tabs.find(tab => tab.active) || win.tabs[0];
+            url = activeTab.url || '';
+            title = activeTab.title || '';
+          }
+          
+          return { window: win, url, title };
         }
       }
     }
     
-    return null;
+    return { window: null };
   } catch (error) {
     console.error('[HandWave] Error finding window:', error);
-    return null;
+    return { window: null };
   }
 }
 
@@ -101,8 +111,8 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendRe
   // Handle window finding request
   if (message.type === MessageType.FIND_WINDOW_AT_POINT) {
     const { x, y } = message.payload || { x: 0, y: 0 };
-    findWindowAtPoint(x, y).then(window => {
-      sendResponse({ window });
+    findWindowAtPoint(x, y).then(result => {
+      sendResponse({ window: result.window, url: result.url, title: result.title });
     }).catch(() => {
       sendResponse({ window: null });
     });
