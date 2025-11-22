@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useCamera } from '../hooks/useCamera';
 
 interface Props {
   onComplete: () => void;
@@ -7,8 +6,6 @@ interface Props {
 
 export function OnboardingFlow({ onComplete }: Props) {
   const [step, setStep] = useState(0);
-  const [cameraError, setCameraError] = useState<string | null>(null);
-  const { requestCamera } = useCamera();
   
   const steps = [
     {
@@ -18,16 +15,11 @@ export function OnboardingFlow({ onComplete }: Props) {
     },
     {
       title: "Camera Access Required",
-      content: "To detect your hand gestures, Minority Report needs access to your camera. Please click 'Grant Camera Access' and allow camera permissions when prompted by your browser. All processing happens locally on your device—your video never leaves your computer.",
-      buttonText: "Grant Camera Access",
+      content: "To detect your hand gestures, Minority Report needs access to your camera. When you enable the extension, your browser will prompt you to allow camera access. Please click 'Allow' when prompted.\n\nAll processing happens locally on your device—your video never leaves your computer.",
+      buttonText: "I Understand",
       action: async () => {
-        try {
-          setCameraError(null);
-          await requestCamera();
-          setStep(step + 1);
-        } catch (error) {
-          setCameraError("Camera access denied. Please check your browser permissions and try again.");
-        }
+        // Camera will be requested when overlay loads, not from popup
+        setStep(step + 1);
       }
     },
     {
@@ -64,12 +56,6 @@ export function OnboardingFlow({ onComplete }: Props) {
         </div>
         <h2 className="text-2xl font-bold mb-2">{currentStep.title}</h2>
         <p className="text-gray-600 mb-6 whitespace-pre-line">{currentStep.content}</p>
-        
-        {cameraError && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
-            {cameraError}
-          </div>
-        )}
       </div>
       
       <button
@@ -81,10 +67,7 @@ export function OnboardingFlow({ onComplete }: Props) {
       
       {step > 0 && (
         <button
-          onClick={() => {
-            setStep(step - 1);
-            setCameraError(null);
-          }}
+          onClick={() => setStep(step - 1)}
           className="mt-2 w-full text-gray-500 hover:text-gray-700 text-sm"
         >
           Back

@@ -28,7 +28,7 @@ export function CameraView({ videoRef, canvasRef, stream, hands, debugMode }: Pr
     
     hands.forEach((hand, idx) => {
       const color = idx === 0 ? '#3b82f6' : '#ef4444'; // blue or red
-      drawHandSkeleton(ctx, hand, color);
+      drawHandSkeleton(ctx, hand, color, idx);
       drawLandmarkIndices(ctx, hand.landmarks);
     });
   }, [hands, debugMode, canvasRef]);

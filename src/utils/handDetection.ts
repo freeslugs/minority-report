@@ -6,6 +6,8 @@ let model: handpose.HandPose | null = null;
 
 export async function initModel(): Promise<void> {
   await tf.setBackend('webgl');
+  // Note: handpose.load() doesn't support maxHands parameter directly
+  // The model will detect up to 2 hands by default
   model = await handpose.load();
 }
 

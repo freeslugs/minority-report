@@ -12,6 +12,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         popup: 'src/popup/index.html',
+        overlay: 'src/overlay/index.html',
       }
     }
   }

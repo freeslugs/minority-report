@@ -64,6 +64,15 @@ export function PopupApp() {
         <span className="text-sm text-gray-700">Debug Mode</span>
       </label>
       
+      <div className="mt-4 p-3 bg-blue-50 rounded text-xs text-blue-800">
+        <p className="font-semibold mb-1">Gestures:</p>
+        <ul className="list-disc list-inside space-y-1">
+          <li>Point hand at window → highlights</li>
+          <li>Pinch (thumb + index) → minimizes</li>
+          <li>Swipe up/down → scrolls page</li>
+        </ul>
+      </div>
+      
       <div className={`mt-4 p-2 rounded ${enabled ? 'bg-green-100' : 'bg-red-100'}`}>
         <span className={`text-sm ${enabled ? 'text-green-800' : 'text-red-800'}`}>
           Status: {enabled ? '✓ Active' : '○ Inactive'}

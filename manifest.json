@@ -5,7 +5,9 @@
   "description": "Gesture-controlled browser navigation using hand tracking",
   "permissions": [
     "activeTab",
-    "storage"
+    "storage",
+    "windows",
+    "offscreen"
   ],
   "host_permissions": [
     "<all_urls>"

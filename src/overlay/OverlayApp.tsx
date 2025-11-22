@@ -39,10 +39,37 @@ export function OverlayApp() {
     };
   }, [requestCamera, setIsRunning]);
   
+  // Show loading state while initializing
+  if (!stream && !error) {
+    return (
+      <div 
+        ref={overlayRef}
+        className="fixed z-[9999] rounded-lg shadow-2xl border-2 border-blue-500 bg-white p-6"
+        style={{ left: position.x, top: position.y }}
+      >
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+          <p className="text-gray-600">Initializing camera...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (error) {
     return (
-      <div className="fixed z-[9999] bg-red-50 border border-red-200 rounded-lg p-4 shadow-lg" style={{ left: position.x, top: position.y }}>
-        <p className="text-red-700">Camera Error: {error}</p>
+      <div className="fixed z-[9999] bg-red-50 border-2 border-red-300 rounded-lg p-6 shadow-lg max-w-md" style={{ left: position.x, top: position.y }}>
+        <h3 className="text-lg font-bold text-red-800 mb-2">Camera Access Required</h3>
+        <p className="text-red-700 mb-4">
+          {error.includes('denied') || error.includes('permission') 
+            ? "Camera access was denied. Please click the camera icon in your browser's address bar and allow camera access, then refresh this page."
+            : `Camera Error: ${error}`}
+        </p>
+        <button
+          onClick={() => window.location.reload()}
+          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+        >
+          Reload Page
+        </button>
       </div>
     );
   }

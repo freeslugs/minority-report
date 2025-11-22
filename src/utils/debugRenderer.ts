@@ -9,8 +9,10 @@ const HAND_CONNECTIONS = [
   [5, 9], [9, 13], [13, 17] // palm connections
 ];
 
-export function drawHandSkeleton(ctx: CanvasRenderingContext2D, hand: Hand, color: string) {
-  ctx.strokeStyle = color;
+export function drawHandSkeleton(ctx: CanvasRenderingContext2D, hand: Hand, color: string, handIndex: number = 0) {
+  // Use different colors for left (blue) and right (red) hands
+  const handColor = handIndex === 0 ? '#3b82f6' : '#ef4444';
+  ctx.strokeStyle = color || handColor;
   ctx.lineWidth = 2;
   
   HAND_CONNECTIONS.forEach(([start, end]) => {
