@@ -13,7 +13,7 @@ export function OverlayApp() {
   const overlayRef = useRef<HTMLDivElement>(null);
   
   const { stream, error, requestCamera } = useCamera();
-  const { hands, fps, isRunning, setIsRunning } = useHandDetection(videoRef);
+  const { hands, fps, setIsRunning } = useHandDetection(videoRef);
   const { position } = useDraggable(overlayRef);
   const { debugMode } = useExtensionState();
   

@@ -4,9 +4,12 @@ export interface Landmark {
   z: number;
 }
 
-export interface Hand {
+export interface RawHand {
   landmarks: Landmark[];
   confidence: number;
+}
+
+export interface Hand extends RawHand {
   fingersExtended: boolean[]; // [thumb, index, middle, ring, pinky]
 }
 

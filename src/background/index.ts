@@ -9,7 +9,7 @@ chrome.runtime.onInstalled.addListener(() => {
   });
 });
 
-chrome.runtime.onMessage.addListener((message: ExtensionMessage, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message: ExtensionMessage) => {
   // Relay messages between popup and content scripts
   if (message.type === MessageType.ENABLE_EXTENSION || 
       message.type === MessageType.DISABLE_EXTENSION) {

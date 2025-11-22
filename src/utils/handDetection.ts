@@ -1,6 +1,6 @@
 import * as tf from '@tensorflow/tfjs';
 import * as handpose from '@tensorflow-models/handpose';
-import { Hand } from '../types/hand.types';
+import { RawHand } from '../types/hand.types';
 
 let model: handpose.HandPose | null = null;
 
@@ -9,7 +9,7 @@ export async function initModel(): Promise<void> {
   model = await handpose.load();
 }
 
-export async function detectHands(video: HTMLVideoElement): Promise<Hand[]> {
+export async function detectHands(video: HTMLVideoElement): Promise<RawHand[]> {
   if (!model) throw new Error('Model not initialized');
   
   const predictions = await model.estimateHands(video);
