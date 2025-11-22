@@ -1,11 +1,13 @@
 import { Hand } from '../types/hand.types';
-import { mapCameraToScreen, findWindowAtPoint, getScreenDimensions } from './coordinateMapper';
+import { MessageType } from '../types/message.types';
+import { mapCameraToScreen, findWindowAtPointViaMessage, getScreenDimensions } from './coordinateMapper';
 
 let highlightedWindowId: number | null = null;
 let highlightOverlay: HTMLDivElement | null = null;
 
 /**
  * Highlight a window with a visual border
+ * Sends message to background worker since chrome.windows API is only available there
  */
 export async function highlightWindow(windowId: number): Promise<void> {
   // Remove previous highlight
@@ -17,23 +19,15 @@ export async function highlightWindow(windowId: number): Promise<void> {
     return; // Already highlighted
   }
   
-  try {
-    const window = await chrome.windows.get(windowId);
-    if (!window.left || !window.top || !window.width || !window.height) {
-      return;
-    }
-    
-    // Create highlight overlay (we'll inject this into the window's content)
-    // For now, we'll use chrome.windows.update to add a visual indicator
-    // In a real implementation, you'd inject a border overlay into the window
-    
-    highlightedWindowId = windowId;
-    
-    // Store highlight info for removal
-    console.log(`[HandWave] Highlighting window ${windowId}`);
-  } catch (error) {
-    console.error('Error highlighting window:', error);
-  }
+  highlightedWindowId = windowId;
+  
+  // Send message to background worker to handle window operations
+  chrome.runtime.sendMessage({
+    type: MessageType.HIGHLIGHT_WINDOW_REQUEST,
+    payload: { windowId }
+  }).catch(() => {});
+  
+  console.log(`[HandWave] Highlighting window ${windowId}`);
 }
 
 /**
@@ -53,15 +47,16 @@ export function removeHighlight(): void {
 
 /**
  * Minimize a window
+ * Sends message to background worker since chrome.windows API is only available there
  */
 export async function minimizeWindow(windowId: number): Promise<void> {
-  try {
-    await chrome.windows.update(windowId, { state: 'minimized' });
-    console.log(`[HandWave] Minimized window ${windowId}`);
-    removeHighlight();
-  } catch (error) {
-    console.error('Error minimizing window:', error);
-  }
+  chrome.runtime.sendMessage({
+    type: MessageType.MINIMIZE_WINDOW,
+    payload: { windowId }
+  }).catch(() => {});
+  
+  console.log(`[HandWave] Minimizing window ${windowId}`);
+  removeHighlight();
 }
 
 /**
@@ -72,7 +67,7 @@ export async function getWindowForHand(hand: Hand): Promise<chrome.windows.Windo
   const wrist = hand.landmarks[0];
   const screenPoint = mapCameraToScreen(wrist, screen.width, screen.height);
   
-  return await findWindowAtPoint(screenPoint.x, screenPoint.y);
+  return await findWindowAtPointViaMessage(screenPoint.x, screenPoint.y);
 }
 
 /**

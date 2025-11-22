@@ -71,7 +71,54 @@ async function closeOverlayWindow(): Promise<void> {
   }
 }
 
-chrome.runtime.onMessage.addListener((message: ExtensionMessage) => {
+// Helper function to find window at screen point
+async function findWindowAtPoint(screenX: number, screenY: number): Promise<chrome.windows.Window | null> {
+  try {
+    const windows = await chrome.windows.getAll({ populate: false });
+    
+    for (const win of windows) {
+      if (win.left !== undefined && win.top !== undefined && 
+          win.width !== undefined && win.height !== undefined) {
+        if (
+          screenX >= win.left &&
+          screenX <= win.left + win.width &&
+          screenY >= win.top &&
+          screenY <= win.top + win.height
+        ) {
+          return win;
+        }
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('[HandWave] Error finding window:', error);
+    return null;
+  }
+}
+
+chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendResponse) => {
+  // Handle window finding request
+  if (message.type === MessageType.FIND_WINDOW_AT_POINT) {
+    const { x, y } = message.payload || { x: 0, y: 0 };
+    findWindowAtPoint(x, y).then(window => {
+      sendResponse({ window });
+    }).catch(() => {
+      sendResponse({ window: null });
+    });
+    return true; // Keep channel open for async response
+  }
+  
+  // Handle window highlight request
+  if (message.type === MessageType.HIGHLIGHT_WINDOW_REQUEST) {
+    const { windowId } = message.payload || {};
+    if (windowId) {
+      chrome.windows.get(windowId).catch(() => {});
+      // Could add visual highlighting here if needed
+    }
+    return true;
+  }
+  
   // Handle enable/disable extension
   if (message.type === MessageType.ENABLE_EXTENSION) {
     createOverlayWindow().then(() => {

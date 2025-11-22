@@ -1,4 +1,5 @@
 import { Landmark } from '../types/hand.types';
+import { MessageType } from '../types/message.types';
 
 /**
  * Map camera coordinates to screen coordinates
@@ -17,29 +18,42 @@ export function mapCameraToScreen(
 
 /**
  * Find which window a hand is pointing at
+ * Note: This must be called via message to background worker since chrome.windows API
+ * is only available there. Use findWindowAtPointViaMessage instead.
  */
 export async function findWindowAtPoint(
+  _screenX: number,
+  _screenY: number
+): Promise<chrome.windows.Window | null> {
+  // This function is deprecated - use findWindowAtPointViaMessage instead
+  // which sends a message to background worker
+  return null;
+}
+
+/**
+ * Find window at point by sending message to background worker
+ */
+export async function findWindowAtPointViaMessage(
   screenX: number,
   screenY: number
 ): Promise<chrome.windows.Window | null> {
   try {
-    const windows = await chrome.windows.getAll({ populate: false });
-    
-    for (const win of windows) {
-      if (win.left !== undefined && win.top !== undefined && 
-          win.width !== undefined && win.height !== undefined) {
-        if (
-          screenX >= win.left &&
-          screenX <= win.left + win.width &&
-          screenY >= win.top &&
-          screenY <= win.top + win.height
-        ) {
-          return win;
+    return new Promise((resolve) => {
+      chrome.runtime.sendMessage(
+        {
+          type: MessageType.FIND_WINDOW_AT_POINT,
+          payload: { x: screenX, y: screenY }
+        },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            console.error('Error finding window:', chrome.runtime.lastError);
+            resolve(null);
+          } else {
+            resolve(response?.window || null);
+          }
         }
-      }
-    }
-    
-    return null;
+      );
+    });
   } catch (error) {
     console.error('Error finding window:', error);
     return null;
